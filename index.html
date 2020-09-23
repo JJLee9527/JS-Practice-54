@@ -25,21 +25,21 @@
   <div id="preorder-form" class="modal" style="display: none; ">
     <form action="">
       <div class="form-group">
-        <label for="name">您的姓名</label>
-        <input type="text" class="form-control" maxlength="20">
+        <label for="person-name">您的姓名</label>
+        <input id="person-name" type="text" class="form-control" maxlength="20">
       </div>
       <div class="form-group">
-        <label for="email">您的電子信箱</label>
-        <input type="email" class="form-control">
+        <label for="person-tel">您的聯絡電話</label>
+        <input id="person-tel" type="number" class="form-control">
       </div>
       <div class="form-group">
-        <label for="name">住房日期</label>
-        <input type="text" class="form-control" maxlength="20">
+        <label for="person-date">住房日期</label>
+        <input id="person-date" type="date" class="form-control" maxlength="20">
       </div>
     </form>
     <div class="modal-footer d-flex ml-auto">
       <button class="btn btn-secondary">取消</button>
-      <button class="btn btn-primary">確認送出</button>
+      <button class="btn btn-primary" onclick="placeOrder()">確認送出</button>
     </div>
   </div>
 </body>
@@ -49,13 +49,18 @@
 
 <script rel="text/javascript">
   let url_getRooms = 'https://challenge.thef2e.com/api/thef2e2019/stage6/rooms';
+  let url_orderRoom = 'https://challenge.thef2e.com/api/thef2e2019/stage6/room/';
+  let url_orderRoom_new = '';
+  
 
   // 列表區塊
   let container = document.getElementById('room-list')
 
   // 宣告資料
   let rooms = [];
-  let selectedRomm = null;
+  let orderRoomId = '';
+  let selectedRom = null;
+  
 
   // 定義函式
   const getRooms = ()=>{
@@ -76,13 +81,76 @@
     })
   }
 
-
   // 點擊前往
   const toRoom = (event) =>{
     console.log(event)
     console.log(event.target.dataset.id)
     // console.log(event.target.attribute['data-id'])
     window.location.href = "./room.html?"+ event.target.dataset.id
+  }
+
+  // 點擊預約
+  let person = {
+    name: '',
+    tel: '',
+    date: [],
+  }
+  const placeOrder = ()=>{
+    person.date = []
+    let personName = document.getElementById('person-name');
+    let personTel = document.getElementById('person-tel');
+    let personDate = document.getElementById('person-date');
+    person.name= personName.value;
+    person.tel = personTel.value;
+    person.date.unshift(personDate.value);
+    console.log(person)
+    if(personName.value == '' || personTel.value == ''){
+      return
+    }else{
+      order()
+      $.modal.close();
+    }
+  }
+  
+  // 帶入預約房間代號
+  const orderRoomIdSet = (id)=>{
+    orderRoomId = id;
+    url_orderRoom_new = null
+    url_orderRoom_new = url_orderRoom + id;
+    console.log(url_orderRoom_new)
+    // console.log(orderRoomId,url_orderRoom_new)
+  }
+
+  // 預約
+  let order = ()=>{
+    console.log(url_orderRoom_new, person)
+    fetch(url_orderRoom_new,{
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization':'Bearer WVJXp0EzDDOieND3BXS77i0sxu1tN7RAztJx3EKIhDQsySexZRgA9EQpDAWs'
+      },
+      body: JSON.stringify(person),
+      mode: 'cors',
+      cache: 'no-cache'
+    }).then(response=>{
+      return response.json();
+    }).then(json=>{
+      console.log(json)
+      showSuccessAlert(json)
+    }).catch(err=>{
+      console.log(err)
+    })
+  }
+
+  // 成功的跳窗
+  const showSuccessAlert = (response)=>{
+    if(response.success == true){
+      alert('預約成功!')
+    }else{
+      alert('好像出了點問題?'+response.message)
+    }
   }
 
   // 渲染項目
@@ -101,7 +169,7 @@
                 <h4 class="text-secondary mb-0">${room.normalDayPrice}</h4>
               </div>
               <div class="right ml-auto">
-                <button type="button" class="btn btn-dark" data-modal>立即預約</button>
+                <button type="button" class="btn btn-dark" data-modal onclick="orderRoomIdSet('${room.id}')">立即預約</button>
               </div>
             </div>
           </div>

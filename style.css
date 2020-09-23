@@ -1,5 +1,6 @@
 
 .modal{
+  position: absolute;
   overflow: initial;
   left: 50%;
   top: 50%;
